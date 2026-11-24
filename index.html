@@ -1,0 +1,194 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Lentra CRM - Test Leads Generator</title>
+
+    <style>
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        padding: 40px 20px;
+        min-height: 100vh;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        background: #f3f4f8;
+        font-family: Arial, sans-serif;
+        color: #172033;
+      }
+
+      .form-container {
+        width: 100%;
+        max-width: 480px;
+        padding: 32px;
+        background: #fff;
+        border-radius: 16px;
+        box-shadow: 0 8px 30px rgba(15, 23, 48, 0.08);
+      }
+
+      h1 {
+        margin: 0 0 8px;
+        font-size: 26px;
+      }
+
+      .description {
+        margin: 0 0 24px;
+        color: #737b8c;
+        font-size: 14px;
+        line-height: 1.5;
+      }
+
+      button {
+        width: 100%;
+        padding: 14px;
+        border: none;
+        border-radius: 8px;
+        background: #5b55f7;
+        color: #fff;
+        font-size: 15px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: background 0.2s;
+      }
+
+      button:hover {
+        background: #4942e5;
+      }
+
+      button:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+      }
+
+      .response {
+        display: none;
+        margin-top: 20px;
+        padding: 14px;
+        border-radius: 8px;
+        font-size: 13px;
+        line-height: 1.6;
+        overflow-wrap: anywhere;
+        white-space: pre-wrap;
+      }
+
+      .response.success {
+        display: block;
+        background: #e8f8ef;
+        color: #176b3a;
+      }
+
+      .response.error {
+        display: block;
+        background: #fff0f0;
+        color: #b4232c;
+      }
+
+      @media (max-width: 480px) {
+        body {
+          padding: 20px 12px;
+        }
+
+        .form-container {
+          padding: 24px 18px;
+        }
+      }
+    </style>
+  </head>
+
+  <body>
+    <main class="form-container">
+      <h1>Test Leads Generator</h1>
+
+      <p class="description">
+        Generate 10 sample appointment requests for Lentra CRM.
+      </p>
+
+      <button id="generateButton" type="button">Generate 10 Test Leads</button>
+
+      <div id="response" class="response"></div>
+    </main>
+
+    <script>
+      const API_URL = "https://www.lentra.tech/api/lead";
+      const SITE_ID = "55a2d905";
+
+      const clients = [
+        {
+          name: "Emily Johnson",
+          category: "Dental Consultation",
+          date: "2026-10-29",
+          booking_time: "09:00",
+        },
+        {
+          name: "Benjamin Moore",
+          category: "Dental Crown Consultation",
+          date: "2026-10-31",
+          booking_time: "15:30",
+        },
+      ];
+
+      const generateButton = document.getElementById("generateButton");
+      const responseBox = document.getElementById("response");
+
+      generateButton.addEventListener("click", async () => {
+        generateButton.disabled = true;
+        generateButton.textContent = "Generating...";
+        responseBox.className = "response";
+        responseBox.textContent = "Sending test leads...";
+
+        let successful = 0;
+        const errors = [];
+
+        try {
+          for (const client of clients) {
+            try {
+              const response = await fetch(API_URL, {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                  "x-site-id": SITE_ID,
+                },
+                body: JSON.stringify(client),
+              });
+
+              if (!response.ok) {
+                const message = await response.text();
+
+                throw new Error(
+                  `${client.name}: HTTP ${response.status} - ${message}`,
+                );
+              }
+
+              successful++;
+
+              responseBox.textContent = `Creating test leads: ${successful}/${clients.length}`;
+            } catch (error) {
+              errors.push(
+                error instanceof Error ? error.message : String(error),
+              );
+            }
+          }
+
+          const failed = clients.length - successful;
+
+          responseBox.className =
+            failed === 0 ? "response success" : "response error";
+
+          responseBox.textContent =
+            `Generation completed.\n\n` +
+            `Successfully created: ${successful}/${clients.length}\n` +
+            `Failed: ${failed}/${clients.length}` +
+            (errors.length ? `\n\nErrors:\n${errors.join("\n")}` : "");
+        } finally {
+          generateButton.disabled = false;
+          generateButton.textContent = "Generate 10 Test Leads";
+        }
+      });
+    </script>
+  </body>
+</html>
